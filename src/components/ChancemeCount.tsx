@@ -15,8 +15,7 @@ const colorClass = {
 export const ChancemeCount = (props: Props) => {
   const { name, color } = props;
 
-  // czポイント加算
-  const [point, incrementPoint, pointClear] = usePoint();
+  const [point, incrementPoint, results, deside] = usePoint();
   const [nonHakkou, setNonHakkou] = useCount();
   const [hakkou, setHakkou] = useCount();
   const [onePoint, setOnePoint] = useCount();
@@ -72,11 +71,14 @@ export const ChancemeCount = (props: Props) => {
           発光率: <span className="text-xl font-bold">{hakkouRitu.toFixed(1)}%</span>
         </p>
         <button
-          onClick={() => pointClear()}
+          onClick={() => deside()}
           className="cursor-pointer rounded-lg border border-red-300 bg-white px-3 py-2 text-sm text-red-600 select-none active:bg-red-100"
         >
           ポイントクリア
         </button>
+        <ul>
+          {results.map((r, i) => ( <li key={i}>{i + 1}回目: {r}</li>))}
+        </ul>
       </div>
     </section>
   );
