@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-const INITIAL_RESULTS: number[] = []
 export const usePoint = () => {
   const [point, setPoint] = useState(0);
   const incrementPoint = (num: number) => setPoint((prev) => prev + num)
