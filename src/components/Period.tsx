@@ -9,49 +9,68 @@ const CYCLES = [
   { name: "4周期", low: 34, high: 47 },
 ] as const;
 
-// 非当選がcount回続く確率の対数（小さい数のかけ算によるアンダーフロー対策）
-const logMissProb = (count: number, winRatePercent: number) => count * Math.log(1 - winRatePercent / 100);
-const formatProb = (p: number) => `${(p * 100).toFixed(2)}%`;
-export const Period = () => { const counters = [useCount(), useCount(), useCount(), useCount()];
+// 対数尤度: 当選w回・非当選m回が起きる確率の対数（アンダーフロー対策）
+const logLikelihood = (win: number, miss: number, ratePercent: number) => {
+  const p = ratePercent / 100;
+  return win * Math.log(p) + miss * Math.log(1 - p);
+};
+
+export const Period = () => {
+  const missCounters = [useCount(), useCount(), useCount(), useCount()];
+  const winCounters = [useCount(), useCount(), useCount(), useCount()];
 
   const periods = CYCLES.map((cycle, i) => {
-    const [num, onPlus, onMinus] = counters[i];
-    return { ...cycle, num, onPlus, onMinus };
+    const [miss, onMissPlus, onMissMinus] = missCounters[i];
+    const [win, onWinPlus, onWinMinus] = winCounters[i];
+    return { ...cycle, miss, onMissPlus, onMissMinus, win, onWinPlus, onWinMinus };
   });
 
-  const logLow = periods.reduce((sum, p) => sum + logMissProb(p.num, p.low), 0);
-  const logHigh = periods.reduce((sum, p) => sum + logMissProb(p.num, p.high), 0);
+  const logLow = periods.reduce((s, p) => s + logLikelihood(p.win, p.miss, p.low), 0);
+  const logHigh = periods.reduce((s, p) => s + logLikelihood(p.win, p.miss, p.high), 0);
 
-  const lowProb = Math.exp(logLow); // 設定1でこの結果になる確率
-  const highProb = Math.exp(logHigh); // 設定6でこの結果になる確率
-  const ratio = Math.exp(logLow - logHigh); // 設定1のほうが何倍起きやすいか
-  const highPosterior = 1 / (1 + ratio); // 設定1/6が五分五分だった場合に設定6である確率
+  // 設定1のほうが何倍この結果になりやすいか（尤度比）
+  const ratio = Math.exp(logLow - logHigh);
+  // 事前確率を設定1:設定6 = 50:50 とした場合の事後確率
+  const highPosterior = 1 / (1 + ratio);
+  const lowPosterior = 1 - highPosterior;
 
   return (
     <section className="rounded-xl border border-blue-200 bg-blue-50 p-3">
       <h2 className="mb-2 text-lg font-bold">通常周期の非当選カウント</h2>
-
       <div className="flex flex-wrap gap-2">
         {periods.map((p) => (
           <Stepper
-            key={p.name}
+            key={`miss-${p.name}`}
             name={p.name}
-            num={p.num}
-            onIncrement={p.onPlus}
-            onDecrement={p.onMinus}
+            num={p.miss}
+            onIncrement={p.onMissPlus}
+            onDecrement={p.onMissMinus}
+          />
+        ))}
+      </div>
+
+      <h2 className="mb-2 mt-3 text-lg font-bold">通常周期の当選カウント</h2>
+      <div className="flex flex-wrap gap-2">
+        {periods.map((p) => (
+          <Stepper
+            key={`win-${p.name}`}
+            name={p.name}
+            num={p.win}
+            onIncrement={p.onWinPlus}
+            onDecrement={p.onWinMinus}
           />
         ))}
       </div>
 
       <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
-        <dt className="text-gray-600">設定1</dt>
-        <dd className="font-bold">{formatProb(lowProb)}</dd>
-
-        <dt className="text-gray-600">設定6</dt>
-        <dd className="font-bold">{formatProb(highProb)}</dd>
+        <dt className="text-gray-600">設定1の確率</dt>
+        <dd className="font-bold">{(lowPosterior * 100).toFixed(1)}%</dd>
 
         <dt className="text-gray-600">設定6の確率</dt>
         <dd className="font-bold">{(highPosterior * 100).toFixed(1)}%</dd>
+
+        <dt className="text-gray-600">尤度比(設定1/設定6)</dt>
+        <dd className="font-bold">{ratio.toFixed(2)}倍</dd>
       </dl>
     </section>
   );
