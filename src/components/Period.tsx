@@ -9,10 +9,19 @@ const CYCLES = [
   { name: "4周期", low: 34, high: 47 },
 ] as const;
 
-// 対数尤度: 当選w回・非当選m回が起きる確率の対数（アンダーフロー対策）
+const EPS = 1e-12;
+
 const logLikelihood = (win: number, miss: number, ratePercent: number) => {
-  const p = ratePercent / 100;
+  // p が 0 や 1 になると log が -Infinity / NaN になるため丸める
+  const p = Math.min(Math.max(ratePercent / 100, EPS), 1 - EPS);
   return win * Math.log(p) + miss * Math.log(1 - p);
+};
+
+// 尤度比の表示用(極端な値で Infinity や 0.00 にならないようにする)
+const formatRatio = (ratio: number) => {
+  if (ratio >= 1000) return "1000倍以上";
+  if (ratio <= 0.001) return "0.001倍以下";
+  return `${ratio.toFixed(2)}倍`;
 };
 
 export const Period = () => {
@@ -28,11 +37,14 @@ export const Period = () => {
   const logLow = periods.reduce((s, p) => s + logLikelihood(p.win, p.miss, p.low), 0);
   const logHigh = periods.reduce((s, p) => s + logLikelihood(p.win, p.miss, p.high), 0);
 
-  // 設定1のほうが何倍この結果になりやすいか（尤度比）
+  // 設定1のほうが何倍この結果になりやすいか（尤度比）。表示用
   const ratio = Math.exp(logLow - logHigh);
+
   // 事前確率を設定1:設定6 = 50:50 とした場合の事後確率
-  const highPosterior = 1 / (1 + ratio);
-  const lowPosterior = 1 - highPosterior;
+  // exp のオーバーフローを避けるため、シグモイド形式で計算する
+  const diff = logHigh - logLow; // 正なら設定6寄り
+  const highPosterior = 1 / (1 + Math.exp(-diff));
+  const lowPosterior = 1 / (1 + Math.exp(diff));
 
   return (
     <section className="rounded-xl border border-blue-200 bg-blue-50 p-3">
@@ -70,7 +82,7 @@ export const Period = () => {
         <dd className="font-bold">{(highPosterior * 100).toFixed(1)}%</dd>
 
         <dt className="text-gray-600">尤度比(設定1/設定6)</dt>
-        <dd className="font-bold">{ratio.toFixed(2)}倍</dd>
+        <dd className="font-bold">{formatRatio(ratio)}</dd>
       </dl>
     </section>
   );
