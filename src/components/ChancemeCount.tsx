@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useCount } from "../hooks/useCount";
 import { Stepper } from "./Stepper";
 
@@ -15,23 +14,25 @@ const colorClass = {
 export const ChancemeCount = (props: Props) => {
   const { name, color } = props;
 
-// それぞれ異なる変数名で 4 つのカウント状態を定義する
-  const [nonHakkouPoint, incrementNonHakkou, decrementNonHakkou] = useCount();
-  const [hakkouPoint, incrementHakkou, decrementHakkou] = useCount();
-  const [p1Point, increment1p, decrement1p] = useCount();
-  const [p15Point, increment15p, decrement15p] = useCount();
-  //CZの合計ポイント
-  const [totalPoint, setTotalPoint] = useState(0);
-
-  const total = nonHakkouPoint + hakkouPoint;
-  const hakkouRitu = total === 0 ? 0 : (hakkouPoint / total) * 100;
-  const test = [
+  // 発光なし
+  const [nonHakkouPoint, incrementNonHakkou, decrementNonHakkou, resetNonHakkouPoint] = useCount(`${name}-nonHakkouPoint`);
+  // 発光あり
+  const [hakkouPoint, incrementHakkou, decrementHakkou, resetHakkouPoint] = useCount(`${name}-hakkouPoint`);
+  // 発光不明で1ポイント
+  const [p1Point, increment1p, decrement1p, resetP1Point] = useCount(`${name}-p1Point`);
+  // 発光不明で15ポイント
+  const [p15Point, increment15p, decrement15p, resetP15Point] = useCount(`${name}-p15Point`);
+  // CZの合計ポイント
+  const [totalPoint, incrementPoint, , pointReset] = useCount(`${name}-totalPoint`);
+  const totalHakkou = nonHakkouPoint + hakkouPoint;
+  const hakkouRitu = totalHakkou === 0 ? 0 : (hakkouPoint / totalHakkou) * 100;
+  const list = [
     { 
       name: "発光無し", 
       num: nonHakkouPoint, 
       onIncrement: incrementNonHakkou, 
       onDecrement: decrementNonHakkou,
-      point: 1 
+      point: 1
     },
     { 
       name: "発光", 
@@ -56,20 +57,30 @@ export const ChancemeCount = (props: Props) => {
     },
   ] as const;
 
-//  const total = hakkou + nonHakkou;
-//  const hakkouRitu = total === 0 ? 0 : (hakkou / total) * 100;
   return (
     <section className={`rounded-xl border p-3 ${colorClass[color]}`}>
       <h2 className="mb-2 text-lg font-bold">{name}</h2>
-
+      <button 
+        onClick = {() => {
+          resetNonHakkouPoint();
+          resetHakkouPoint();
+          resetP1Point();
+          resetP15Point();
+          pointReset();
+          } 
+        }
+        className="cursor-pointer rounded-lg border border-red-600 bg-red-600 px-3 py-2 text-sm text-white select-none hover:bg-red-700 active:bg-red-800 mb-2"
+        >
+        オールクリア
+      </button>
       <div className="flex flex-wrap gap-2">
-          {test.map((p) => (
+         {list.map((p) => (
             <Stepper
               onIncrement={p.onIncrement}
               onDecrement={p.onDecrement}
               name={p.name}
               num={p.num}
-              onClick={() => setTotalPoint((prev) => prev + p.point)}
+              onClick={() => incrementPoint(p.point)}
             />
           ))}
       </div>
@@ -82,7 +93,7 @@ export const ChancemeCount = (props: Props) => {
             発光率: <span className="text-xl font-bold">{hakkouRitu.toFixed(1)}%</span>
         </p>
         <button
-          onClick={() => setTotalPoint(0)}
+          onClick={() => pointReset()}
           className="cursor-pointer rounded-lg border border-red-300 bg-white px-3 py-2 text-sm text-red-600 select-none active:bg-red-100"
         >
           ポイントクリア
