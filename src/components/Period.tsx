@@ -25,17 +25,27 @@ const formatRatio = (ratio: number) => {
 };
 
 export const Period = () => {
-  const missCounters = [useCount(), useCount(), useCount(), useCount()];
-  const winCounters = [useCount(), useCount(), useCount(), useCount()];
+  // 非当選・当選でストレージキーが被らないよう、キー名を分ける
+  const [missFirst, missFirstPlus, missFirstMinus, resetWinFirst] = useCount(`${CYCLES[0].name}-miss`);
+  const [missSecond, missSecondPlus, missSecondMinus, resetWinSecond] = useCount(`${CYCLES[1].name}-miss`);
+  const [missThird, missThirdPlus, missThirdMinus, resetWinThird] = useCount(`${CYCLES[2].name}-miss`);
+  const [missFourth, missFourthPlus, missFourthMinus, resetWinFourth] = useCount(`${CYCLES[3].name}-miss`);
 
-  const periods = CYCLES.map((cycle, i) => {
-    const [miss, onMissPlus, onMissMinus] = missCounters[i];
-    const [win, onWinPlus, onWinMinus] = winCounters[i];
-    return { ...cycle, miss, onMissPlus, onMissMinus, win, onWinPlus, onWinMinus };
-  });
+  const [winFirst, winFirstPlus, winFirstMinus, resetMissFirst] = useCount(`${CYCLES[0].name}-win`);
+  const [winSecond, winSecondPlus, winSecondMinus, resetMissSecond] = useCount(`${CYCLES[1].name}-win`);
+  const [winThird, winThirdPlus, winThirdMinus, resetMissThird] = useCount(`${CYCLES[2].name}-win`);
+  const [winFourth, winFourthPlus, winFourthMinus, resetMissFourth] = useCount(`${CYCLES[3].name}-win`);
 
-  const logLow = periods.reduce((s, p) => s + logLikelihood(p.win, p.miss, p.low), 0);
-  const logHigh = periods.reduce((s, p) => s + logLikelihood(p.win, p.miss, p.high), 0);
+  const periods = [
+    { ...CYCLES[0], miss: missFirst, win: winFirst, onMissPlus: missFirstPlus, onMissMinus: missFirstMinus, onWinPlus: winFirstPlus, onWinMinus: winFirstMinus },
+    { ...CYCLES[1], miss: missSecond, win: winSecond, onMissPlus: missSecondPlus, onMissMinus: missSecondMinus, onWinPlus: winSecondPlus, onWinMinus: winSecondMinus },
+    { ...CYCLES[2], miss: missThird, win: winThird, onMissPlus: missThirdPlus, onMissMinus: missThirdMinus, onWinPlus: winThirdPlus, onWinMinus: winThirdMinus },
+    { ...CYCLES[3], miss: missFourth, win: winFourth, onMissPlus: missFourthPlus, onMissMinus: missFourthMinus, onWinPlus: winFourthPlus, onWinMinus: winFourthMinus },
+  ];
+
+  // 各周期の対数尤度を合計(設定1 / 設定6)
+  const logLow = periods.reduce((sum, p) => sum + logLikelihood(p.win, p.miss, p.low), 0);
+  const logHigh = periods.reduce((sum, p) => sum + logLikelihood(p.win, p.miss, p.high), 0);
 
   // 設定1のほうが何倍この結果になりやすいか（尤度比）。表示用
   const ratio = Math.exp(logLow - logHigh);
@@ -73,7 +83,6 @@ export const Period = () => {
           />
         ))}
       </div>
-
       <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
         <dt className="text-gray-600">設定1の確率</dt>
         <dd className="font-bold">{(lowPosterior * 100).toFixed(1)}%</dd>
@@ -84,6 +93,22 @@ export const Period = () => {
         <dt className="text-gray-600">尤度比(設定1/設定6)</dt>
         <dd className="font-bold">{formatRatio(ratio)}</dd>
       </dl>
+      <button 
+        onClick = {() => {
+            resetWinFirst();
+            resetWinSecond();
+            resetWinThird();
+            resetWinFourth();
+            resetMissFirst();
+            resetMissSecond();
+            resetMissThird();
+            resetMissFourth();
+          } 
+        }
+        className="cursor-pointer rounded-lg border border-red-600 bg-red-600 px-3 py-2 text-sm text-white select-none hover:bg-red-700 active:bg-red-800 mb-2"
+        >
+        オールクリア
+      </button>
     </section>
   );
 };
