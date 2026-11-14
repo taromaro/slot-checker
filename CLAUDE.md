@@ -17,6 +17,13 @@ React 19 + TypeScript + Vite + Tailwind CSS v4。GitHub Pages の `/slot-checker
 
 **変更を終えたら必ず `npm run check` を通すこと。** 失敗したまま完了報告しない。
 
+### テストが失敗したとき
+
+- 直すのは**実装側**。テスト・設定ファイル（`tsconfig.json`、`.oxlintrc.json`、`package.json`、`.claude/` など）を変えて通すのは禁止
+- `@ts-ignore`、`oxlint-disable`、`it.skip`、`.only` などで黙らせるのも禁止
+- テストや設定が本当に間違っていると判断したら、理由を説明してユーザーに提案し、作業を止める
+- これらは `.claude/hooks/guard.sh` で機械的にブロックされる。解除できるのはユーザーだけ（`.claude/allow-config-edit` を手動で作成）
+
 ## 構成
 
 - `src/hooks/` — 状態とロジック（`useCount`, `usePoint`）。UI を持たない
