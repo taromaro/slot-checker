@@ -37,4 +37,33 @@ describe("GedanBell", () => {
     await user.click(screen.getByRole("button", { name: "+" }));
     expect(screen.getByText("-")).toBeInTheDocument();
   });
+
+  it("割り切れない場合は小数2桁で表示する", async () => {
+    const user = userEvent.setup();
+    render(<GedanBell />);
+    for (let i = 0; i < 3; i++) await user.click(screen.getByRole("button", { name: "+" }));
+    await user.type(screen.getByLabelText("トータルゲーム数"), "1000");
+    expect(screen.getByText("1/333.33")).toBeInTheDocument();
+  });
+
+  it("回数を0に戻すと確率は - に戻る", async () => {
+    const user = userEvent.setup();
+    render(<GedanBell />);
+    await user.type(screen.getByLabelText("トータルゲーム数"), "300");
+    await user.click(screen.getByRole("button", { name: "+" }));
+    expect(screen.getByText("1/300.00")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "−" }));
+    expect(screen.getByText("-")).toBeInTheDocument();
+  });
+
+  it("オールクリアで回数とゲーム数が0に戻る", async () => {
+    const user = userEvent.setup();
+    render(<GedanBell />);
+    await user.click(screen.getByRole("button", { name: "+" }));
+    await user.type(screen.getByLabelText("トータルゲーム数"), "300");
+    await user.click(screen.getByText("オールクリア"));
+    expect(screen.getByLabelText("トータルゲーム数")).toHaveValue(0);
+    expect(screen.getByRole("button", { name: "+" }).previousElementSibling).toHaveTextContent("0");
+    expect(screen.getByText("-")).toBeInTheDocument();
+  });
 });
