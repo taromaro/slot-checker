@@ -20,7 +20,7 @@ fail() {
 [[ -z "$(git status --porcelain -- src package.json tsconfig.json vite.config.js 2>/dev/null)" ]] && exit 0
 
 out=$(npm run --silent typecheck 2>&1) || fail "型チェックが失敗しています。" "$(tail -40 <<<"$out")"
-out=$(NO_COLOR=1 npx --no-install vitest run 2>&1) || fail "テストが失敗しています。" "$(tail -60 <<<"$out")"
+out=$(NO_COLOR=1 npx --no-install vitest run --coverage 2>&1) || fail "テストが失敗したか、カバレッジが下限を下回っています。" "$(tail -60 <<<"$out")"
 
 rm -f "$marker"
 exit 0

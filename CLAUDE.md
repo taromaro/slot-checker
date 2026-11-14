@@ -8,7 +8,7 @@ React 19 + TypeScript + Vite + Tailwind CSS v4。GitHub Pages の `/slot-checker
 | 目的          | コマンド                                                                |
 | ------------- | ----------------------------------------------------------------------- |
 | 開発サーバー  | `npm run dev`（コンテナ内 5173 → ホスト 15173）                         |
-| 全チェック    | `npm run check`（format:check → lint → typecheck → test:run）           |
+| 全チェック    | `npm run check`（format:check → lint → typecheck → test:coverage）      |
 | テスト（1回） | `npm run test:run` / 単体: `npx vitest run src/hooks/useCount.test.tsx` |
 | 整形          | `npm run format`（oxfmt）                                               |
 | Lint          | `npm run lint`（oxlint）                                                |
@@ -30,6 +30,13 @@ React 19 + TypeScript + Vite + Tailwind CSS v4。GitHub Pages の `/slot-checker
 - `src/components/` — 表示コンポーネント。共通部品は `Stepper`
 - `src/App.tsx` — 画面の組み立て
 - テストは対象ファイルの隣に `*.test.tsx` で置く（Vitest + Testing Library、jsdom）
+
+## テストの書き方
+
+- カバレッジは**下限**であって目標ではない。行を通すだけでなく、**結果の値を検証する**（「表示されている」ではなく「15 になる」）
+- 実装を壊したら失敗するテストか？を意識する。不具合修正は、まず再現テストを書いて失敗を確認してから直す
+- localStorage を使うコンポーネントのテストは `beforeEach(() => localStorage.clear())` を入れる
+- カバレッジ下限（`vite.config.js` の `thresholds`）は引き上げるだけ。全体は現状値、`src/hooks`・`src/logic` は 90%
 
 ## 規約
 

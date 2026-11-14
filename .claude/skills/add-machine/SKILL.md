@@ -19,7 +19,7 @@ description: 新しいパチスロ機種（例：モンハンライズ、グー�
    - 先にテスト（`*.test.tsx`）を書き、境界値（0回、極端な値）も含める
 
 3. **UI を作る**
-   - 共通部品の `CountUp` と `Stepper` を使う。部品が足りないときだけ `src/components/` に追加する
+   - 共通部品の `Stepper` を使う。部品が足りないときだけ `src/components/` に追加する
    - 機種の画面コンポーネントは `src/machines/<機種>/<機種>Page.tsx`
 
 4. **画面に組み込む**

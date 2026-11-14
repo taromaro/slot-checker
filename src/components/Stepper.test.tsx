@@ -5,8 +5,8 @@ import { Stepper } from "./Stepper";
 
 describe("Stepper", () => {
   it("＋を押すと onIncrement だけが引数なしで呼ばれる", () => {
-    const onIncrement = vi.fn();
-    const onDecrement = vi.fn();
+    const onIncrement = vi.fn<() => void>();
+    const onDecrement = vi.fn<() => void>();
     render(<Stepper name="回数" num={1} onIncrement={onIncrement} onDecrement={onDecrement} />);
     fireEvent.click(screen.getByRole("button", { name: "+" }));
     expect(onIncrement).toHaveBeenCalledWith();
@@ -14,8 +14,8 @@ describe("Stepper", () => {
   });
 
   it("−を押すと onDecrement だけが引数なしで呼ばれる", () => {
-    const onIncrement = vi.fn();
-    const onDecrement = vi.fn();
+    const onIncrement = vi.fn<() => void>();
+    const onDecrement = vi.fn<() => void>();
     render(<Stepper name="回数" num={1} onIncrement={onIncrement} onDecrement={onDecrement} />);
     fireEvent.click(screen.getByRole("button", { name: "−" }));
     expect(onDecrement).toHaveBeenCalledWith();
@@ -23,8 +23,10 @@ describe("Stepper", () => {
   });
 
   it("0のときは−を押せない", () => {
-    const onDecrement = vi.fn();
-    render(<Stepper name="回数" num={0} onIncrement={vi.fn()} onDecrement={onDecrement} />);
+    const onDecrement = vi.fn<() => void>();
+    render(
+      <Stepper name="回数" num={0} onIncrement={vi.fn<() => void>()} onDecrement={onDecrement} />,
+    );
     fireEvent.click(screen.getByRole("button", { name: "−" }));
     expect(onDecrement).not.toHaveBeenCalled();
   });
