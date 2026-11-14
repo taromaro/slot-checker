@@ -79,6 +79,7 @@ export const ChancemeCount = (props: Props) => {
       <div className="flex flex-wrap gap-2">
         {list.map((p) => (
           <Stepper
+            key={p.name}
             onIncrement={p.onIncrement}
             onDecrement={p.onDecrement}
             name={p.name}
