@@ -3,20 +3,19 @@ type CounterProps = {
   num: number;
   onIncrement: () => void;
   onDecrement: () => void;
-  onClick?: () => void;
 };
 
-export function Stepper({ name, num, onIncrement, onDecrement, onClick }: CounterProps) {
+// onIncrement / onDecrement は引数なしで呼ぶ。
+// onClick={onIncrement} と直接渡すとクリックイベントが引数に入り、
+// useCount の increment(num = 1) などが誤動作するため、アロー関数で包んでいる。
+export function Stepper({ name, num, onIncrement, onDecrement }: CounterProps) {
   return (
     <div className="flex shrink-0 flex-col items-center rounded-lg border border-gray-300 bg-white px-2 py-2 select-none">
       <span className="text-sm text-gray-600">{name}</span>
       <div className="flex items-center gap-1">
         <button
           type="button"
-          onClick={() => {
-            onDecrement();
-            onClick?.();
-          }}
+          onClick={() => onDecrement()}
           disabled={num <= 0}
           className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border border-gray-300 text-lg leading-none font-bold text-gray-600 hover:bg-gray-100 active:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40"
         >
@@ -25,10 +24,7 @@ export function Stepper({ name, num, onIncrement, onDecrement, onClick }: Counte
         <span className="min-w-6 text-center text-xl font-bold">{num}</span>
         <button
           type="button"
-          onClick={() => {
-            onIncrement();
-            onClick?.();
-          }}
+          onClick={() => onIncrement()}
           className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border border-gray-300 text-lg leading-none font-bold text-gray-600 hover:bg-gray-100 active:bg-gray-200"
         >
           +

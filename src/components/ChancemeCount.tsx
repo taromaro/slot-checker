@@ -27,7 +27,7 @@ export const ChancemeCount = (props: Props) => {
   // 発光不明で15ポイント
   const [p15Point, increment15p, decrement15p, resetP15Point] = useCount(`${name}-p15Point`);
   // CZの合計ポイント
-  const [totalPoint, incrementPoint, , pointReset] = useCount(`${name}-totalPoint`);
+  const [totalPoint, incrementPoint, decrementPoint, pointReset] = useCount(`${name}-totalPoint`);
   const totalHakkou = nonHakkouPoint + hakkouPoint;
   const hakkouRitu = totalHakkou === 0 ? 0 : (hakkouPoint / totalHakkou) * 100;
   const list = [
@@ -80,11 +80,17 @@ export const ChancemeCount = (props: Props) => {
         {list.map((p) => (
           <Stepper
             key={p.name}
-            onIncrement={p.onIncrement}
-            onDecrement={p.onDecrement}
+            onIncrement={() => {
+              p.onIncrement();
+              incrementPoint(p.point);
+            }}
+            onDecrement={() => {
+              p.onDecrement();
+              // ポイントクリア後に減らしても合計がマイナスにならないようにする
+              decrementPoint(Math.min(p.point, totalPoint));
+            }}
             name={p.name}
             num={p.num}
-            onClick={() => incrementPoint(p.point)}
           />
         ))}
       </div>
