@@ -1,50 +1,28 @@
 import { useCount } from "../hooks/useCount";
+import { CYCLES, estimateSetting, formatRatio } from "../logic/periodEstimate";
 import { Stepper } from "./Stepper";
-
-// 周期ごとの当選率(%) low = 設定1、high = 設定6
-const CYCLES = [
-  { name: "1周期", low: 33, high: 33 },
-  { name: "2周期", low: 33, high: 57 },
-  { name: "3周期", low: 18, high: 37 },
-  { name: "4周期", low: 34, high: 47 },
-] as const;
-
-const EPS = 1e-12;
-
-const logLikelihood = (win: number, miss: number, ratePercent: number) => {
-  // p が 0 や 1 になると log が -Infinity / NaN になるため丸める
-  const p = Math.min(Math.max(ratePercent / 100, EPS), 1 - EPS);
-  return win * Math.log(p) + miss * Math.log(1 - p);
-};
-
-// 尤度比の表示用(極端な値で Infinity や 0.00 にならないようにする)
-const formatRatio = (ratio: number) => {
-  if (ratio >= 1000) return "1000倍以上";
-  if (ratio <= 0.001) return "0.001倍以下";
-  return `${ratio.toFixed(2)}倍`;
-};
 
 export const Period = () => {
   // 非当選・当選でストレージキーが被らないよう、キー名を分ける
-  const [missFirst, missFirstPlus, missFirstMinus, resetWinFirst] = useCount(
+  const [missFirst, missFirstPlus, missFirstMinus, resetMissFirst] = useCount(
     `${CYCLES[0].name}-miss`,
   );
-  const [missSecond, missSecondPlus, missSecondMinus, resetWinSecond] = useCount(
+  const [missSecond, missSecondPlus, missSecondMinus, resetMissSecond] = useCount(
     `${CYCLES[1].name}-miss`,
   );
-  const [missThird, missThirdPlus, missThirdMinus, resetWinThird] = useCount(
+  const [missThird, missThirdPlus, missThirdMinus, resetMissThird] = useCount(
     `${CYCLES[2].name}-miss`,
   );
-  const [missFourth, missFourthPlus, missFourthMinus, resetWinFourth] = useCount(
+  const [missFourth, missFourthPlus, missFourthMinus, resetMissFourth] = useCount(
     `${CYCLES[3].name}-miss`,
   );
 
-  const [winFirst, winFirstPlus, winFirstMinus, resetMissFirst] = useCount(`${CYCLES[0].name}-win`);
-  const [winSecond, winSecondPlus, winSecondMinus, resetMissSecond] = useCount(
+  const [winFirst, winFirstPlus, winFirstMinus, resetWinFirst] = useCount(`${CYCLES[0].name}-win`);
+  const [winSecond, winSecondPlus, winSecondMinus, resetWinSecond] = useCount(
     `${CYCLES[1].name}-win`,
   );
-  const [winThird, winThirdPlus, winThirdMinus, resetMissThird] = useCount(`${CYCLES[2].name}-win`);
-  const [winFourth, winFourthPlus, winFourthMinus, resetMissFourth] = useCount(
+  const [winThird, winThirdPlus, winThirdMinus, resetWinThird] = useCount(`${CYCLES[2].name}-win`);
+  const [winFourth, winFourthPlus, winFourthMinus, resetWinFourth] = useCount(
     `${CYCLES[3].name}-win`,
   );
 
@@ -87,18 +65,7 @@ export const Period = () => {
     },
   ];
 
-  // 各周期の対数尤度を合計(設定1 / 設定6)
-  const logLow = periods.reduce((sum, p) => sum + logLikelihood(p.win, p.miss, p.low), 0);
-  const logHigh = periods.reduce((sum, p) => sum + logLikelihood(p.win, p.miss, p.high), 0);
-
-  // 設定1のほうが何倍この結果になりやすいか（尤度比）。表示用
-  const ratio = Math.exp(logLow - logHigh);
-
-  // 事前確率を設定1:設定6 = 50:50 とした場合の事後確率
-  // exp のオーバーフローを避けるため、シグモイド形式で計算する
-  const diff = logHigh - logLow; // 正なら設定6寄り
-  const highPosterior = 1 / (1 + Math.exp(-diff));
-  const lowPosterior = 1 / (1 + Math.exp(diff));
+  const { lowPosterior, highPosterior, ratio } = estimateSetting(periods);
 
   return (
     <section className="rounded-xl border border-blue-200 bg-blue-50 p-3">
@@ -139,14 +106,14 @@ export const Period = () => {
       </dl>
       <button
         onClick={() => {
-          resetWinFirst();
-          resetWinSecond();
-          resetWinThird();
-          resetWinFourth();
           resetMissFirst();
           resetMissSecond();
           resetMissThird();
           resetMissFourth();
+          resetWinFirst();
+          resetWinSecond();
+          resetWinThird();
+          resetWinFourth();
         }}
         className="mb-2 cursor-pointer rounded-lg border border-red-600 bg-red-600 px-3 py-2 text-sm text-white select-none hover:bg-red-700 active:bg-red-800"
       >
