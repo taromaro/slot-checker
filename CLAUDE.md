@@ -26,8 +26,8 @@ React 19 + TypeScript + Vite + Tailwind CSS v4。GitHub Pages の `/slot-checker
 
 ## 構成
 
-- `src/hooks/` — 状態とロジック（`useCount`, `usePoint`）。UI を持たない
-- `src/components/` — 表示コンポーネント。共通部品は `CountUp`, `Stepper`
+- `src/hooks/` — 状態とロジック（`useCount`）。UI を持たない
+- `src/components/` — 表示コンポーネント。共通部品は `Stepper`
 - `src/App.tsx` — 画面の組み立て
 - テストは対象ファイルの隣に `*.test.tsx` で置く（Vitest + Testing Library、jsdom）
 
