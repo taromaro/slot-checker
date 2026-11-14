@@ -18,11 +18,10 @@ export const useCount = (storageKey?: string) => {
     if (!storageKey) return;
     try {
       localStorage.setItem(storageKey, String(point));
-    } catch {
-    }
+    } catch {}
   }, [storageKey, point]);
 
-  const incrementCount = (num = 1) => setCount((prev) => prev + num); 
+  const incrementCount = (num = 1) => setCount((prev) => prev + num);
   const decrementCount = (num = 1) => setCount((prev) => prev - num);
   const reset = () => setCount(0);
   return [point, incrementCount, decrementCount, reset] as const;

@@ -13,7 +13,7 @@ export function Stepper({ name, num, onIncrement, onDecrement, onClick }: Counte
       <div className="flex items-center gap-1">
         <button
           type="button"
-          onClick={()=>{
+          onClick={() => {
             onDecrement();
             onClick?.();
           }}
@@ -25,7 +25,7 @@ export function Stepper({ name, num, onIncrement, onDecrement, onClick }: Counte
         <span className="min-w-6 text-center text-xl font-bold">{num}</span>
         <button
           type="button"
-          onClick={()=>{
+          onClick={() => {
             onIncrement();
             onClick?.();
           }}
