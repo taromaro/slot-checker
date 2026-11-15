@@ -1,5 +1,5 @@
-import { useCount } from "../hooks/useCount";
-import { Stepper } from "./Stepper";
+import { Stepper } from "../../components/Stepper";
+import { useCount } from "../../hooks/useCount";
 
 const name = "下段ベル";
 export const GedanBell = () => {
