@@ -3,6 +3,10 @@
 パチスロ実戦中に使うカウンター／設定推測アプリ。現在は「カバネリ」用。
 React 19 + TypeScript + Vite + Tailwind CSS v4。GitHub Pages の `/slot-checker/` で公開（`vite.config.js` の `base`）。
 
+## 方針
+
+自動化の作業をするときは `../AUTOMATION.md` を読む
+
 ## コマンド
 
 | 目的          | コマンド                                                                |
