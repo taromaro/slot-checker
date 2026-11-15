@@ -51,6 +51,19 @@ describe("App", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("機種選択");
   });
 
+  it("ホームにモンハンライズが表示され、選ぶと機種ページが開く", () => {
+    render(<App />);
+    const links = screen.getAllByRole("link").map((a) => a.textContent);
+    expect(links).toEqual(["カバネリ", "モンハンライズ"]);
+    expect(screen.getByRole("link", { name: "モンハンライズ" })).toHaveAttribute(
+      "href",
+      "#/mhrise",
+    );
+    goTo("#/mhrise");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("モンハンライズ");
+    expect(screen.getByText("準備中")).toBeInTheDocument();
+  });
+
   it("存在しない機種のハッシュならホーム画面を表示する", () => {
     window.location.hash = "#/unknown";
     render(<App />);
