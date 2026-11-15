@@ -1,6 +1,6 @@
 import { Stepper } from "../../components/Stepper";
 import { useCount } from "../../hooks/useCount";
-import { CYCLES, estimateSetting, formatRatio } from "../../logic/periodEstimate";
+import { CYCLES, estimateSetting, formatRatio } from "./periodEstimate";
 
 export const Period = () => {
   // 非当選・当選でストレージキーが被らないよう、キー名を分ける
