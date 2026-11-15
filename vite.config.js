@@ -19,8 +19,8 @@ export default defineConfig({
         branches: 95,
         functions: 95,
         lines: 95,
-        // ロジック（状態・計算）はすべてテストする
-        "src/{hooks,logic}/**": {
+        // 共通 hook と機種ごとのソース（状態・計算・画面）はすべてテストする
+        "src/{hooks,machines}/**": {
           statements: 100,
           branches: 100,
           functions: 100,

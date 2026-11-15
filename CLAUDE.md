@@ -31,8 +31,10 @@ React 19 + TypeScript + Vite + Tailwind CSS v4。GitHub Pages の `/slot-checker
 ## 構成
 
 - `src/hooks/` — 状態（`useCount`）。UI を持たない
-- `src/logic/` — 計算ロジック（`periodEstimate` など）。React に依存しない純粋関数
-- `src/components/` — 表示コンポーネント。共通部品は `Stepper`
+- `src/components/` — 機種をまたいで使う共通の表示部品（`Stepper`、`MachineSelect`）
+- `src/machines/<機種>/` — 機種専用のソース（画面・計算ロジック・hook とそのテスト）。`index.ts` に機種を登録する
+  - `kabaneri/` — カバネリ（周期の設定推測 `periodEstimate` など）
+  - `mhrise/` — モンハンライズ（準備中）
 - `src/App.tsx` — 画面の組み立て
 - テストは対象ファイルの隣に `*.test.tsx` で置く（Vitest + Testing Library、jsdom）
 
@@ -41,7 +43,7 @@ React 19 + TypeScript + Vite + Tailwind CSS v4。GitHub Pages の `/slot-checker
 - カバレッジは**下限**であって目標ではない。行を通すだけでなく、**結果の値を検証する**（「表示されている」ではなく「15 になる」）
 - 実装を壊したら失敗するテストか？を意識する。不具合修正は、まず再現テストを書いて失敗を確認してから直す
 - localStorage を使うコンポーネントのテストは `beforeEach(() => localStorage.clear())` を入れる
-- カバレッジ下限（`vite.config.js` の `thresholds`）は引き上げるだけ。全体は 95%、`src/hooks`・`src/logic` は 100%
+- カバレッジ下限（`vite.config.js` の `thresholds`）は引き上げるだけ。全体は 95%、`src/hooks`・`src/machines` は 100%
 
 ## 規約
 
