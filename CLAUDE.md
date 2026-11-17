@@ -17,6 +17,10 @@ React 19 + TypeScript + Vite + Tailwind CSS v4。GitHub Pages の `/slot-checker
 - ファイルを読む・`npm run check` などのコマンドを実行して状況を確かめるのはよい
 - ユーザーが「コードを書いて」とはっきり頼んだときだけ、例外として書いてよい
   自動化の作業をするときは `../AUTOMATION.md` を読む
+- 例外として、**画面のレイアウト・見た目は直接編集してよい**
+  - 対象：Tailwind のクラス（`className`）と、並べ方・入れ子・ラッパー要素などのマークアップ構造
+  - 対象外：state、イベント処理（`onClick` など）、計算ロジック、データ構造、テスト。これらは従来どおり言葉で示す
+  - 見た目の変更でも、変更後は `npm run check` を通す
 
 ## コマンド
 
