@@ -7,25 +7,24 @@ export const FIELD_BG: Record<Field, string> = {
 };
 export type Field = (typeof FIELDS)[number];
 export type Omen = (typeof OMENS)[number];
+type FieldRates = Record<Field, number>;
 type Quest = {
-  num: number;
-  omen: Omen;
-  field: Field;
+  本前兆: FieldRates;
+  フェイク前兆?: FieldRates;
 };
-type table = {
+type Table = {
   name: string;
-  quests: Quest[];
+  quest: Quest[];
   questExpectation: number[];
 }
-export const tableA = {
+export const tableA: Table = {
   name: "テーブルA",
   // クエスト回数ごとの、前兆別・フィールド別の選択率（配列の 0 番目が 1 回目）
   quest: [
     // 1回目
     {
       本前兆: { 大社跡: 58.9, 寒冷群島: 33.3, 溶岩洞: 7.8 },
-      フェイク前兆: { 大社跡: 89.7, 寒冷群島: 10.0, 溶岩洞: 0.3 },
-    },
+      フェイク前兆: { 大社跡: 89.7, 寒冷群島: 10.0, 溶岩洞: 0.3 }, },
     // 2回目
     {
       本前兆: { 大社跡: 25.5, 寒冷群島: 66.7, 溶岩洞: 7.8 },
@@ -185,17 +184,31 @@ export const heaven = {
   ],
 };
 
-export const calcTableRates = (questCount: number) => {
-  const valueOfTableA = questCount < 7 ? tableA.questExpectation[questCount] : 0;
-  const valueOfTableB = questCount < 7 ? tableB.questExpectation[questCount] : 0;
-  const valueOfHeavenPrep = questCount < 7 ? heavenPrep.questExpectation[questCount] : 0;
-  const valueOfHeaven = questCount == 0 ? heaven.questExpectation[questCount] : 0;
-  const total = valueOfTableA + valueOfTableB + valueOfHeavenPrep + valueOfHeaven;
+//期待度をクエスト回数とフィールドと、前兆の違いを使って算出
+const tableSelectionRate = (table: Table, questCount: number, field: Field, omen: Omen) => {
   
+  if(questCount <= 0) {
+    return 0;
+  }
+  
+  if(questCount > table.quest.length) {
+    return 0;
+  }
+  return table.quest[questCount - 1][omen]?.[field] ?? 0;
+};
+
+export const calcTableRates = (questCount: number, field: Field, omen: Omen) => {
+  const valueOfTableA = tableSelectionRate(tableA, questCount, field, omen);
+  const valueOfTableB = tableSelectionRate(tableB, questCount, field, omen);
+  const valueOfHeavenPrep = tableSelectionRate(heavenPrep, questCount, field, omen);
+  const valueOfHeaven = tableSelectionRate(heaven, questCount, field, omen);
+  const total = valueOfTableA + valueOfTableB + valueOfHeavenPrep + valueOfHeaven;
+  const toRate = (value: number) => (total === 0 ? 0 : (value / total) * 100);
+
   return {
-    tableA: (valueOfTableA / total) * 100,
-    tableB: (valueOfTableB / total) * 100,
-    heavenPrep: (valueOfHeavenPrep / total) * 100,
-    heaven: (valueOfHeaven / total) * 100,
+    tableA: toRate(valueOfTableA),
+    tableB: toRate(valueOfTableB),
+    heavenPrep: toRate(valueOfHeavenPrep),
+    heaven: toRate(valueOfHeaven)
   } as const;
 };

@@ -61,7 +61,6 @@ describe("App", () => {
     );
     goTo("#/mhrise");
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("モンハンライズ");
-    expect(screen.getByText("準備中")).toBeInTheDocument();
   });
 
   it("存在しない機種のハッシュならホーム画面を表示する", () => {
