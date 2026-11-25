@@ -1,6 +1,6 @@
 import { describe } from "vitest";
-import { calcTableRates } from "./questTables";
 
+import { calcTableRates } from "./questTables";
 
 describe("tableSelectionRate", () => {
   it("2回目・大社跡・フェイク前兆なら、選択率 9.7 / 90.0 / 7.1 / 0 の割合になる", () => {
@@ -47,4 +47,4 @@ describe("tableSelectionRate", () => {
       heaven: expect.closeTo(0),
     });
   });
-})
+});

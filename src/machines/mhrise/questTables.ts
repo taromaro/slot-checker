@@ -16,7 +16,7 @@ type Table = {
   name: string;
   quest: Quest[];
   questExpectation: number[];
-}
+};
 export const tableA: Table = {
   name: "テーブルA",
   // クエスト回数ごとの、前兆別・フィールド別の選択率（配列の 0 番目が 1 回目）
@@ -24,7 +24,8 @@ export const tableA: Table = {
     // 1回目
     {
       本前兆: { 大社跡: 58.9, 寒冷群島: 33.3, 溶岩洞: 7.8 },
-      フェイク前兆: { 大社跡: 89.7, 寒冷群島: 10.0, 溶岩洞: 0.3 }, },
+      フェイク前兆: { 大社跡: 89.7, 寒冷群島: 10.0, 溶岩洞: 0.3 },
+    },
     // 2回目
     {
       本前兆: { 大社跡: 25.5, 寒冷群島: 66.7, 溶岩洞: 7.8 },
@@ -186,12 +187,11 @@ export const heaven = {
 
 //期待度をクエスト回数とフィールドと、前兆の違いを使って算出
 const tableSelectionRate = (table: Table, questCount: number, field: Field, omen: Omen) => {
-  
-  if(questCount <= 0) {
+  if (questCount <= 0) {
     return 0;
   }
-  
-  if(questCount > table.quest.length) {
+
+  if (questCount > table.quest.length) {
     return 0;
   }
   return table.quest[questCount - 1][omen]?.[field] ?? 0;
@@ -209,6 +209,6 @@ export const calcTableRates = (questCount: number, field: Field, omen: Omen) => 
     tableA: toRate(valueOfTableA),
     tableB: toRate(valueOfTableB),
     heavenPrep: toRate(valueOfHeavenPrep),
-    heaven: toRate(valueOfHeaven)
+    heaven: toRate(valueOfHeaven),
   } as const;
 };
