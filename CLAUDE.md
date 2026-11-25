@@ -3,9 +3,24 @@
 パチスロ実戦中に使うカウンター／設定推測アプリ。現在は「カバネリ」用。
 React 19 + TypeScript + Vite + Tailwind CSS v4。GitHub Pages の `/slot-checker/` で公開（`vite.config.js` の `base`）。
 
-## 方針
+## 学習方針（重要）
 
-自動化の作業をするときは `../AUTOMATION.md` を読む
+このリポジトリは、ユーザーが自分で実装して力をつけるためのもの。
+
+- **実装のコードは書かない・出さない。** ファイルの編集も、回答にコードを載せることもしない
+- 手伝うのは次のこと:
+  - 考え方・仕様・用語の説明
+  - 不具合の原因へのヒント（答えではなく、どこを見ればよいか・何を調べればよいか）
+  - ユーザーが書いたコードのレビュー（問題点を指摘し、直し方は言葉で示す）
+  - テストの期待値の検算、エラーメッセージの読み方
+- ヒントは段階的に出す。最初は小さなヒントにし、ユーザーが求めたら詳しくする
+- ファイルを読む・`npm run check` などのコマンドを実行して状況を確かめるのはよい
+- ユーザーが「コードを書いて」とはっきり頼んだときだけ、例外として書いてよい
+  自動化の作業をするときは `../AUTOMATION.md` を読む
+- 例外として、**画面のレイアウト・見た目は直接編集してよい**
+  - 対象：Tailwind のクラス（`className`）と、並べ方・入れ子・ラッパー要素などのマークアップ構造
+  - 対象外：state、イベント処理（`onClick` など）、計算ロジック、データ構造、テスト。これらは従来どおり言葉で示す
+  - 見た目の変更でも、変更後は `npm run check` を通す
 
 ## コマンド
 
@@ -31,8 +46,10 @@ React 19 + TypeScript + Vite + Tailwind CSS v4。GitHub Pages の `/slot-checker
 ## 構成
 
 - `src/hooks/` — 状態（`useCount`）。UI を持たない
-- `src/logic/` — 計算ロジック（`periodEstimate` など）。React に依存しない純粋関数
-- `src/components/` — 表示コンポーネント。共通部品は `Stepper`
+- `src/components/` — 機種をまたいで使う共通の表示部品（`Stepper`、`MachineSelect`）
+- `src/machines/<機種>/` — 機種専用のソース（画面・計算ロジック・hook とそのテスト）。`index.ts` に機種を登録する
+  - `kabaneri/` — カバネリ（周期の設定推測 `periodEstimate` など）
+  - `mhrise/` — モンハンライズ（準備中）
 - `src/App.tsx` — 画面の組み立て
 - テストは対象ファイルの隣に `*.test.tsx` で置く（Vitest + Testing Library、jsdom）
 
@@ -41,7 +58,7 @@ React 19 + TypeScript + Vite + Tailwind CSS v4。GitHub Pages の `/slot-checker
 - カバレッジは**下限**であって目標ではない。行を通すだけでなく、**結果の値を検証する**（「表示されている」ではなく「15 になる」）
 - 実装を壊したら失敗するテストか？を意識する。不具合修正は、まず再現テストを書いて失敗を確認してから直す
 - localStorage を使うコンポーネントのテストは `beforeEach(() => localStorage.clear())` を入れる
-- カバレッジ下限（`vite.config.js` の `thresholds`）は引き上げるだけ。全体は 95%、`src/hooks`・`src/logic` は 100%
+- カバレッジ下限（`vite.config.js` の `thresholds`）は引き上げるだけ。全体は 95%、`src/hooks`・`src/machines` は 100%
 
 ## 規約
 
