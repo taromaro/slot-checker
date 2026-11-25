@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
@@ -15,6 +15,18 @@ const rates = () => ({
   heavenPrep: rateText("天国準備"),
   heaven: rateText("天国"),
 });
+
+// 確定した n 回目のテーブル予想から、4テーブルの「xx.x%」表示をまとめて読む
+const predictionRates = (n: number) => {
+  const item = screen.getByRole("listitem", { name: `${n}回目のテーブル予想` });
+  const read = (label: string) => within(item).getByText(label).nextElementSibling?.textContent;
+  return {
+    tableA: read("テーブルA"),
+    tableB: read("テーブルB"),
+    heavenPrep: read("天国準備"),
+    heaven: read("天国"),
+  };
+};
 
 describe("QuestTable", () => {
   it("タイトルがクエストテーブル", () => {
@@ -52,6 +64,7 @@ describe("QuestTable", () => {
   });
 
   it("大社跡・フェイク前兆の1回目は、フェイク前兆の選択率で割合が出る", async () => {
+    // A・B・天国準備とも（100 − 0.4）を掛けるので比は変わらない
     // A 89.7 / B 79.7 / 天国準備 67.1 / 天国 0（フェイク前兆なし） 合計 236.5
     render(<QuestTable />);
     const user = userEvent.setup();
@@ -64,58 +77,159 @@ describe("QuestTable", () => {
     });
   });
 
-  it("大社跡・本前兆の1回目は、4テーブルとも 25.0%", async () => {
-    // 4テーブルとも 58.9 で同じ
+  it("大社跡・本前兆の1回目は、成功期待度の差でほぼ天国になる", async () => {
+    // 選択率は4テーブルとも 58.9。成功期待度が A・B・天国準備 0.4 / 天国 100
     render(<QuestTable />);
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "本前兆" }));
-    expect(rates()).toEqual({
-      tableA: "25.0%",
-      tableB: "25.0%",
-      heavenPrep: "25.0%",
-      heaven: "25.0%",
+    expect(predictionRates(1)).toEqual({
+      tableA: "0.4%",
+      tableB: "0.4%",
+      heavenPrep: "0.4%",
+      heaven: "98.8%",
     });
   });
 
-  it("2回目の本前兆は、選んだフィールドで割合が変わる", async () => {
+  it("本前兆で確定すると、進行中の予想はクエスト0回目・すべて 0.0% に戻る", async () => {
     render(<QuestTable />);
     const user = userEvent.setup();
-    const honZencho = screen.getByRole("button", { name: "本前兆" });
-    await user.click(honZencho);
-    await user.click(honZencho);
-    expect(screen.getByText("クエスト2回目")).toBeInTheDocument();
-
-    // 大社跡: A 25.5 / B 66.7 / 天国準備 25.5 / 天国 0（2回目なし） 合計 117.7
+    await user.click(screen.getByRole("button", { name: "フェイク前兆" }));
+    await user.click(screen.getByRole("button", { name: "本前兆" }));
+    expect(screen.getByText("クエスト0回目")).toBeInTheDocument();
     expect(rates()).toEqual({
-      tableA: "21.7%",
-      tableB: "56.7%",
-      heavenPrep: "21.7%",
+      tableA: "0.0%",
+      tableB: "0.0%",
+      heavenPrep: "0.0%",
       heaven: "0.0%",
     });
+  });
 
-    // 寒冷群島: A 66.7 / B 25.5 / 天国準備 66.7 / 天国 0 合計 158.9
+  it("確定した予想は、1回目と2回目の（期待度 × 選択率）を掛け合わせた割合になる", async () => {
+    render(<QuestTable />);
+    const user = userEvent.setup();
+    // 1回目 大社跡・フェイク前兆 → 2回目 寒冷群島・本前兆
+    await user.click(screen.getByRole("button", { name: "フェイク前兆" }));
     await user.click(screen.getByRole("radio", { name: "寒冷群島" }));
-    expect(rates()).toEqual({
-      tableA: "42.0%",
-      tableB: "16.0%",
-      heavenPrep: "42.0%",
+    await user.click(screen.getByRole("button", { name: "本前兆" }));
+
+    // A 99.6×89.7 × 30.1×66.7 / B 99.6×79.7 × 9.8×25.5 / 天国準備 99.6×67.1 × 25.0×66.7 / 天国 0
+    expect(predictionRates(1)).toEqual({
+      tableA: "57.7%",
+      tableB: "6.4%",
+      heavenPrep: "35.9%",
       heaven: "0.0%",
     });
   });
 
-  it("クエスト回数は7回目で止まる", async () => {
+  it("前兆を押した後にフィールドを変えても、記録済みの割合は変わらない", async () => {
     render(<QuestTable />);
     const user = userEvent.setup();
-    const honZencho = screen.getByRole("button", { name: "本前兆" });
-    for (let i = 0; i < 8; i++) {
-      await user.click(honZencho);
-    }
-    expect(screen.getByText("クエスト7回目")).toBeInTheDocument();
-    // 7回目・大社跡・本前兆: A 66.7 / B 25.5 / 天国準備 66.7 / 天国 0 合計 158.9
+    await user.click(screen.getByRole("button", { name: "フェイク前兆" }));
+    await user.click(screen.getByRole("radio", { name: "寒冷群島" }));
+    // 1回目 大社跡・フェイク前兆 のまま
     expect(rates()).toEqual({
-      tableA: "42.0%",
-      tableB: "16.0%",
-      heavenPrep: "42.0%",
+      tableA: "37.9%",
+      tableB: "33.7%",
+      heavenPrep: "28.4%",
+      heaven: "0.0%",
+    });
+  });
+
+  it("フェイク前兆は6回目で止まる（7回目にフェイク前兆はない）", async () => {
+    render(<QuestTable />);
+    const user = userEvent.setup();
+    const fake = screen.getByRole("button", { name: "フェイク前兆" });
+    for (let i = 0; i < 8; i++) {
+      await user.click(fake);
+    }
+    expect(screen.getByText("クエスト6回目")).toBeInTheDocument();
+    // 大社跡・フェイク前兆を6回
+    // 各回（100 − 成功期待度）× フェイク前兆の選択率 を6回分掛ける。天国は 0
+    // A 99.6×89.7 × 69.9×9.7 × 90.2×90 × 55.1×9.7 × 90.2×90 × 69.9×9.7
+    // B 99.6×79.7 × 90.2×90 × 50×9.7 × 90.2×90 × 50×9.7 × 90.2×90
+    // 天国準備 99.6×67.1 × 75×7.1 × 50×90 × 25×7.1 × 50×90 × 25×7.1
+    expect(rates()).toEqual({
+      tableA: "12.6%",
+      tableB: "87.2%",
+      heavenPrep: "0.2%",
+      heaven: "0.0%",
+    });
+  });
+
+  it("フェイク前兆6回のあと、7回目の本前兆で予想が確定する", async () => {
+    render(<QuestTable />);
+    const user = userEvent.setup();
+    const fake = screen.getByRole("button", { name: "フェイク前兆" });
+    for (let i = 0; i < 6; i++) {
+      await user.click(fake);
+    }
+    await user.click(screen.getByRole("button", { name: "本前兆" }));
+    // 上の6回分に、7回目 大社跡・本前兆 A 100×66.7 / B 100×25.5 / 天国準備 100×66.7 を掛ける
+    expect(predictionRates(1)).toEqual({
+      tableA: "27.4%",
+      tableB: "72.2%",
+      heavenPrep: "0.4%",
+      heaven: "0.0%",
+    });
+    expect(screen.getByText("クエスト0回目")).toBeInTheDocument();
+  });
+
+  it("確定した予想には、一番可能性が高いテーブル名が書かれる", async () => {
+    render(<QuestTable />);
+    const user = userEvent.setup();
+    // 1回目 大社跡・フェイク前兆 → 2回目 寒冷群島・本前兆 で確定（A 47.9% が最大）
+    await user.click(screen.getByRole("button", { name: "フェイク前兆" }));
+    await user.click(screen.getByRole("radio", { name: "寒冷群島" }));
+    await user.click(screen.getByRole("button", { name: "本前兆" }));
+    const item = screen.getByRole("listitem", { name: "1回目のテーブル予想" });
+    expect(item).toHaveTextContent("テーブルAと予想。");
+  });
+
+  it("1回目に本前兆で確定すると「天国と予想。」と書かれる", async () => {
+    render(<QuestTable />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "本前兆" }));
+    const item = screen.getByRole("listitem", { name: "1回目のテーブル予想" });
+    expect(item).toHaveTextContent("天国と予想。");
+  });
+
+  it("フェイク前兆2回→本前兆で確定すると「クエスト3回目で本前兆」、続けて本前兆で2件目は「クエスト1回目で本前兆」", async () => {
+    render(<QuestTable />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "フェイク前兆" }));
+    await user.click(screen.getByRole("button", { name: "フェイク前兆" }));
+    await user.click(screen.getByRole("button", { name: "本前兆" }));
+    const first = screen.getByRole("listitem", { name: "1回目のテーブル予想" });
+    expect(within(first).getByText("クエスト3回目で本前兆")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "本前兆" }));
+    const second = screen.getByRole("listitem", { name: "2回目のテーブル予想" });
+    expect(within(second).getByText("クエスト1回目で本前兆")).toBeInTheDocument();
+    expect(within(second).queryByText("クエスト3回目で本前兆")).not.toBeInTheDocument();
+    expect(second).toHaveTextContent("天国と予想。");
+    expect(predictionRates(2)).toEqual({
+      tableA: "0.4%",
+      tableB: "0.4%",
+      heavenPrep: "0.4%",
+      heaven: "98.8%",
+    });
+  });
+
+  it("フェイク前兆を8回押しても、本前兆で確定すると「クエスト7回目で本前兆」になり割合は6回分＋本前兆", async () => {
+    render(<QuestTable />);
+    const user = userEvent.setup();
+    const fake = screen.getByRole("button", { name: "フェイク前兆" });
+    for (let i = 0; i < 8; i++) {
+      await user.click(fake);
+    }
+    await user.click(screen.getByRole("button", { name: "本前兆" }));
+    expect(screen.getByRole("radio", { name: "大社跡" })).toBeChecked();
+    const first = screen.getByRole("listitem", { name: "1回目のテーブル予想" });
+    expect(within(first).getByText("クエスト7回目で本前兆")).toBeInTheDocument();
+    expect(predictionRates(1)).toEqual({
+      tableA: "27.4%",
+      tableB: "72.2%",
+      heavenPrep: "0.4%",
       heaven: "0.0%",
     });
   });

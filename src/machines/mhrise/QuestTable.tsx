@@ -1,19 +1,31 @@
-import { useCounter } from "@mantine/hooks";
 import { useState } from "react";
 
-import { calcTableRates, Field, FIELD_BG, FIELDS, Omen, OMENS } from "./questTables";
+import {
+  calcCumulativeTableRates,
+  Field,
+  FIELD_BG,
+  FIELDS,
+  INITIAL_QUEST_STATE,
+  OMENS,
+  predictTableLabel,
+  recordOmen,
+  TABLE_LABELS,
+} from "./questTables";
 
 export const QuestTable = () => {
-  const [questCount, handlers] = useCounter(0, { min: 0, max: 7 });
+  // 次のクエストで選ぶフィールド（前兆ボタンを押したときに履歴へ記録する）
   const [field, setField] = useState<Field>("大社跡");
-  const [omen, setOmen] = useState<Omen>("本前兆");
-  const result = calcTableRates(questCount, field, omen);
+  // 進行中の予想のクエスト履歴と、本前兆で確定した予想
+  const [questState, setQuestState] = useState(INITIAL_QUEST_STATE);
+  const questCount = questState.history.length;
+  const result = calcCumulativeTableRates(questState.history);
   return (
     <section className="rounded-xl border border-gray-300 bg-white p-3">
       <h2 className="mb-2 text-lg font-bold">クエストテーブル</h2>
       <div className="grid grid-cols-3 gap-2">
         {FIELDS.map((item) => (
           <label
+            key={item}
             className={`flex cursor-pointer items-center justify-center gap-1 rounded-lg border px-2 py-2 text-sm font-bold select-none has-checked:border-4 has-checked:border-red-500 ${FIELD_BG[item]}`}
           >
             <input
@@ -29,11 +41,9 @@ export const QuestTable = () => {
       <div className="mt-3 grid grid-cols-2 gap-2">
         {OMENS.map((item) => (
           <button
+            key={item}
             className="cursor-pointer rounded-lg border px-3 py-2 text-sm font-bold transition-colors duration-200 select-none active:bg-yellow-300"
-            onClick={() => {
-              handlers.increment();
-              setOmen(item);
-            }}
+            onClick={() => setQuestState(recordOmen(questState, { field, omen: item }))}
           >
             {item}
           </button>
@@ -90,6 +100,35 @@ export const QuestTable = () => {
           </span>
         </dd>
       </dl>
+      {questState.predictions.length > 0 && (
+        <ol className="mt-4 flex flex-col gap-2">
+          {questState.predictions.map((prediction, index) => (
+            <li
+              key={index}
+              aria-label={`${index + 1}回目のテーブル予想`}
+              className="rounded-lg border border-gray-300 bg-gray-50 p-2"
+            >
+              <h3 className="mb-1 text-sm font-bold">{index + 1}回目のテーブル予想</h3>
+              <p className="mb-1 text-xs text-gray-600">
+                クエスト{prediction.questCount}回目で本前兆
+              </p>
+              <dl className="grid grid-cols-4 gap-1 text-center text-xs">
+                {TABLE_LABELS.map((row) => (
+                  <div key={row.key}>
+                    <dt className="text-gray-600">{row.label}</dt>
+                    <dd className="font-bold tabular-nums">
+                      {prediction.rates[row.key].toFixed(1)}%
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="mt-1 text-sm font-bold text-red-600">
+                {predictTableLabel(prediction.rates)}
+              </p>
+            </li>
+          ))}
+        </ol>
+      )}
     </section>
   );
 };
