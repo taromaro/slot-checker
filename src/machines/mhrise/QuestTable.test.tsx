@@ -5,7 +5,8 @@ import { describe, expect, it } from "vitest";
 import { QuestTable } from "./QuestTable";
 
 // テーブル名（progress の aria-label）から、横に表示されている「xx.x%」を読む
-const rateText = (name: string) => screen.getByRole("progressbar", { name }).parentElement?.textContent;
+const rateText = (name: string) =>
+  screen.getByRole("progressbar", { name }).parentElement?.textContent;
 
 // 4テーブルの「xx.x%」表示をまとめて読む
 const rates = () => ({
