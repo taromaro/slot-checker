@@ -14,12 +14,6 @@
       "Bash(git show:*)",
       "Bash(git branch:*)"
     ],
-    "ask": [
-      "Bash(git push:*)",
-      "Bash(git reset --hard:*)",
-      "Bash(npm install:*)",
-      "Bash(npm uninstall:*)"
-    ],
     "deny": [
       "Edit(./package.json)",
       "Edit(./package-lock.json)",
@@ -32,6 +26,12 @@
       "Edit(./CLAUDE.md)",
       "Edit(./.claude/**)",
       "Edit(./.github/**)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)"
     ]
   },
   "hooks": {
@@ -69,5 +69,8 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "okf@open-knowledge-format": true
   }
 }
