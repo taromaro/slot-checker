@@ -19,6 +19,19 @@
       "Bash(git reset --hard:*)",
       "Bash(npm install:*)",
       "Bash(npm uninstall:*)"
+    ],
+    "deny": [
+      "Edit(./package.json)",
+      "Edit(./package-lock.json)",
+      "Edit(./tsconfig*.json)",
+      "Edit(./.oxlintrc.json)",
+      "Edit(./.oxfmtrc.json)",
+      "Edit(./vite.config.*)",
+      "Edit(./probity.config.ts)",
+      "Edit(./src/setupTests.ts)",
+      "Edit(./CLAUDE.md)",
+      "Edit(./.claude/**)",
+      "Edit(./.github/**)"
     ]
   },
   "hooks": {
@@ -28,8 +41,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard.sh",
-            "timeout": 10
+            "command": "npx --no-install @nizos/probity --agent claude-code",
+            "timeout": 120
           }
         ]
       }
@@ -42,17 +55,6 @@
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/format-and-lint.sh",
             "timeout": 30
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/verify-on-stop.sh",
-            "timeout": 120
           }
         ]
       }
