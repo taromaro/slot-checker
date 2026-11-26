@@ -11,6 +11,8 @@ import {
   recordOmen,
   TABLE_LABELS,
 } from "./questTables";
+import { calcSettingRates } from "./settingEstimation";
+import { SETTINGS } from "./tableTransitions";
 
 export const QuestTable = () => {
   // 次のクエストで選ぶフィールド（前兆ボタンを押したときに履歴へ記録する）
@@ -19,6 +21,8 @@ export const QuestTable = () => {
   const [questState, setQuestState] = useState(INITIAL_QUEST_STATE);
   const questCount = questState.history.length;
   const result = calcCumulativeTableRates(questState.history);
+  // 確定した予想（古い順）から求めた各設定の割合（予想が 2 個以上のときだけ表示する）
+  const settingRates = calcSettingRates(questState.predictions.map((p) => p.rates));
   return (
     <section className="rounded-xl border border-gray-300 bg-white p-3">
       <h2 className="mb-2 text-lg font-bold">クエストテーブル</h2>
@@ -128,6 +132,28 @@ export const QuestTable = () => {
             </li>
           ))}
         </ol>
+      )}
+      {/* 本前兆で確定した予想の並びから設定を推測する（予想が無いうちは出さない） */}
+      {questState.predictions.length > 0 && (
+        <section
+          aria-label="設定推測"
+          className="mt-4 rounded-lg border border-gray-300 bg-gray-50 p-2"
+        >
+          <h3 className="mb-1 text-sm font-bold">設定推測</h3>
+          {questState.predictions.length < 2 ? (
+            // テーブル移行が 1 回もないと設定差が出ないので、案内だけ出す
+            <p className="text-xs text-gray-600">本前兆2回目から設定の割合を表示します。</p>
+          ) : (
+            <dl className="grid grid-cols-6 gap-1 text-center text-xs">
+              {SETTINGS.map((setting) => (
+                <div key={setting}>
+                  <dt className="text-gray-600">設定{setting}</dt>
+                  <dd className="font-bold tabular-nums">{settingRates[setting].toFixed(1)}%</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </section>
       )}
     </section>
   );

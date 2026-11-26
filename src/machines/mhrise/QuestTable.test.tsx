@@ -233,4 +233,85 @@ describe("QuestTable", () => {
       heaven: "0.0%",
     });
   });
+
+  it("確定した予想が1個のときは、設定推測に見出しと案内文だけを出し、割合は出さない", async () => {
+    render(<QuestTable />);
+    const user = userEvent.setup();
+    // 大社跡・フェイク前兆 → 寒冷群島・本前兆
+    await user.click(screen.getByRole("button", { name: "フェイク前兆" }));
+    await user.click(screen.getByRole("radio", { name: "寒冷群島" }));
+    await user.click(screen.getByRole("button", { name: "本前兆" }));
+    const section = screen.getByLabelText("設定推測");
+    expect(section.tagName).toBe("SECTION");
+    expect(within(section).getByText("設定推測")).toBeInTheDocument();
+    expect(
+      within(section).getByText("本前兆2回目から設定の割合を表示します。"),
+    ).toBeInTheDocument();
+    for (let i = 1; i <= 6; i++) {
+      expect(within(section).queryByText(`設定${i}`)).not.toBeInTheDocument();
+    }
+    expect(section).not.toHaveTextContent("%");
+  });
+
+  it("確定した予想が2個になると、設定推測に設定1〜設定6の割合を出し、案内文は消える", async () => {
+    render(<QuestTable />);
+    const user = userEvent.setup();
+    // 大社跡・フェイク前兆 → 寒冷群島・本前兆 を2セット
+    for (let i = 0; i < 2; i++) {
+      await user.click(screen.getByRole("radio", { name: "大社跡" }));
+      await user.click(screen.getByRole("button", { name: "フェイク前兆" }));
+      await user.click(screen.getByRole("radio", { name: "寒冷群島" }));
+      await user.click(screen.getByRole("button", { name: "本前兆" }));
+    }
+    const section = screen.getByLabelText("設定推測");
+    expect(section.tagName).toBe("SECTION");
+    expect(within(section).getByText("設定推測")).toBeInTheDocument();
+    // dt（設定n）の次の dd を読み、ラベルと値の対応を確かめる
+    const read = (label: string) => {
+      const dt = within(section).getByText(label);
+      expect(dt.tagName).toBe("DT");
+      const dd = dt.nextElementSibling;
+      expect(dd?.tagName).toBe("DD");
+      return dd?.textContent;
+    };
+    expect({
+      s1: read("設定1"),
+      s2: read("設定2"),
+      s3: read("設定3"),
+      s4: read("設定4"),
+      s5: read("設定5"),
+      s6: read("設定6"),
+    }).toEqual({
+      s1: "21.5%",
+      s2: "21.0%",
+      s3: "20.5%",
+      s4: "14.6%",
+      s5: "11.8%",
+      s6: "10.7%",
+    });
+    expect(screen.queryByText("本前兆2回目から設定の割合を表示します。")).not.toBeInTheDocument();
+  });
+
+  it("確定した予想が0個（初期表示）のときは、設定推測を出さない", () => {
+    render(<QuestTable />);
+    expect(screen.queryByLabelText("設定推測")).toBeNull();
+  });
+
+  it("設定推測は、確定したテーブル予想を含まず、それらより後ろに出る", async () => {
+    render(<QuestTable />);
+    const user = userEvent.setup();
+    // 大社跡・フェイク前兆 → 寒冷群島・本前兆 を2セット
+    for (let i = 0; i < 2; i++) {
+      await user.click(screen.getByRole("radio", { name: "大社跡" }));
+      await user.click(screen.getByRole("button", { name: "フェイク前兆" }));
+      await user.click(screen.getByRole("radio", { name: "寒冷群島" }));
+      await user.click(screen.getByRole("button", { name: "本前兆" }));
+    }
+    const section = screen.getByLabelText("設定推測");
+    for (const n of [1, 2]) {
+      const item = screen.getByRole("listitem", { name: `${n}回目のテーブル予想` });
+      expect(section.contains(item)).toBe(false);
+      expect(item.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    }
+  });
 });

@@ -4,11 +4,14 @@ title: テーブル移行率
 description: AT 当選時に、今の滞在テーブルから次のクエストテーブルへ移る割合を、設定1〜6ごとにまとめたもの。
 tags: [mhrise, analysis-data, setting-estimation]
 status: draft
-generated: { by: "claude-code/claude-opus-5-5", at: "2026-11-25T12:43:08Z" }
+generated: { by: "claude-code/claude-opus-5-5", at: "2026-11-25T12:59:35Z" }
 sources:
   - id: nana-press
     resource: https://nana-press.com/kaiseki/machine/837/25362/
     title: なな徹「【スマスロ モンハンライズ】クエストテーブルの詳細（移行抽選や示唆演出など）」（更新日 2026/03/25 時点）
+  - id: table-transitions-ts
+    resource: ../../src/machines/mhrise/tableTransitions.ts
+    title: src/machines/mhrise/tableTransitions.ts（2026-11-25 時点）
 ---
 
 モンハンライズの[クエストテーブル](quest-tables.md)（テーブルA・テーブルB・天国準備・天国）は、**AT 当選時**に次のテーブルへの移行抽選を行う。移行率は設定ごとに異なり、設定推測に使える。[^nana-press]
@@ -25,7 +28,7 @@ sources:
 
 # 移行率（%）
 
-行が設定、列が移行先。各行の合計は 100%。[^nana-press]
+行が設定、列が移行先。各行の合計は 100%。[^nana-press] アプリでは `tableTransitions.ts` の `TABLE_TRANSITION_RATES[今のテーブル][設定][移行先]` にこの値を写している（移らない移行先は 0）。[^table-transitions-ts]
 
 ## テーブルA 滞在時
 
@@ -78,6 +81,8 @@ sources:
 
 # アプリでの使い道（未実装）
 
-[テーブル推測](table-estimation.md)で確定したテーブル予想を並べると、「前のテーブル → 次のテーブル」の移り方が分かる。その移り方の見込みを設定ごとに掛け合わせれば、設定推測につなげられる。ただし、テーブル予想は確定ではなく割合で出るので、どう扱うかはまだ決めていない。
+[テーブル推測](table-estimation.md)で本前兆ごとに確定したテーブル予想を並べ、その移り方から設定1〜6の割合を出す。計算方法は [設定推測（テーブル移行から）](setting-estimation.md) を参照。
 
 [^nana-press]: なな徹「【スマスロ モンハンライズ】クエストテーブルの詳細（移行抽選や示唆演出など）」（更新日 2026/03/25 時点）
+
+[^table-transitions-ts]: src/machines/mhrise/tableTransitions.ts（2026-11-25 時点）
