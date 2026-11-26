@@ -4,7 +4,7 @@ export default defineConfig({
   rules: [
     {
       files: ["src/**"],
-      rules: [enforceTdd()],
+      rules: [enforceTdd({ fastPath: true })],
     },
   ],
 });

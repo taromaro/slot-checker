@@ -11,6 +11,9 @@ sources:
   - id: quest-table-tsx
     resource: ../../src/machines/mhrise/QuestTable.tsx
     title: src/machines/mhrise/QuestTable.tsx（コミット 7d66ef6 時点）
+  - id: quest-table-undo
+    resource: ../../src/machines/mhrise/QuestTable.tsx
+    title: src/machines/mhrise/QuestTable.tsx（「一つ前に戻す」追加後）
   - id: mhrise-todo
     resource: ../../docs/mhrise-todo.md
     title: モンハンライズ クエストテーブル推測 やることリスト
@@ -35,6 +38,7 @@ sources:
 - フィールドを選んで前兆ボタン（本前兆／フェイク前兆）を押すと、そのフィールドと前兆を履歴に記録する。[^quest-table-tsx]
 - 進行中の履歴から計算した4テーブルの割合を表示する。[^quest-table-tsx]
 - 本前兆で確定した予想は「n回目のテーブル予想」として一覧に残る。各予想には、何回目のクエストで本前兆だったか、4テーブルの割合（小数1桁の %）、予想テーブル名を出す。[^quest-table-tsx]
+- 「一つ前に戻す」ボタンで、前兆ボタン1回ぶんの操作を取り消す。本前兆で確定した直後に戻すと、確定した予想が消え、本前兆を押す前の履歴に戻る。押すたびに1操作ずつさかのぼる。状態が変わらなかった押下（7回目のフェイク前兆）は数えない。フィールドの選択は戻す対象ではない。戻せる操作がないときは押せない。[^quest-table-undo]
 
 # 今後の候補
 
@@ -44,5 +48,7 @@ sources:
 [^quest-tables-ts]: src/machines/mhrise/questTables.ts（コミット 7d66ef6 時点）
 
 [^quest-table-tsx]: src/machines/mhrise/QuestTable.tsx（コミット 7d66ef6 時点）
+
+[^quest-table-undo]: src/machines/mhrise/QuestTable.tsx（「一つ前に戻す」追加後）
 
 [^mhrise-todo]: モンハンライズ クエストテーブル推測 やることリスト

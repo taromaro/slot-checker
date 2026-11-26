@@ -19,6 +19,8 @@ export const QuestTable = () => {
   const [field, setField] = useState<Field>("大社跡");
   // 進行中の予想のクエスト履歴と、本前兆で確定した予想
   const [questState, setQuestState] = useState(INITIAL_QUEST_STATE);
+  // 「一つ前に戻す」用に、前兆ボタンで状態が変わる直前の state を積んでおく
+  const [undoStack, setUndoStack] = useState<(typeof INITIAL_QUEST_STATE)[]>([]);
   const questCount = questState.history.length;
   const result = calcCumulativeTableRates(questState.history);
   // 確定した予想（古い順）から求めた各設定の割合（予想が 2 個以上のときだけ表示する）
@@ -47,12 +49,30 @@ export const QuestTable = () => {
           <button
             key={item}
             className="cursor-pointer rounded-lg border px-3 py-2 text-sm font-bold transition-colors duration-200 select-none active:bg-yellow-300"
-            onClick={() => setQuestState(recordOmen(questState, { field, omen: item }))}
+            onClick={() => {
+              const next = recordOmen(questState, { field, omen: item });
+              // 状態が変わらなかった操作（打ち止めなど）は戻す対象にしない
+              if (next === questState) return;
+              setUndoStack([...undoStack, questState]);
+              setQuestState(next);
+            }}
           >
             {item}
           </button>
         ))}
       </div>
+      <button
+        type="button"
+        disabled={undoStack.length === 0}
+        onClick={() => {
+          // スタックが空のときはボタンが disabled なので、必ず1つ以上ある
+          setUndoStack(undoStack.slice(0, -1));
+          setQuestState(undoStack[undoStack.length - 1]);
+        }}
+        className="mt-2 w-full cursor-pointer rounded-lg border px-3 py-2 text-sm font-bold transition-colors duration-200 select-none active:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        一つ前に戻す
+      </button>
       <div>クエスト{questCount}回目</div>
       <dl className="mt-3 grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 text-sm">
         <dt className="text-gray-600">テーブルA</dt>

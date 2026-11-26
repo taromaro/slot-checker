@@ -314,4 +314,217 @@ describe("QuestTable", () => {
       expect(item.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     }
   });
+
+  describe("一つ前に戻す", () => {
+    const undoButton = () => screen.getByRole("button", { name: "一つ前に戻す" });
+
+    it("初期表示では「一つ前に戻す」ボタンが disabled", () => {
+      render(<QuestTable />);
+      expect(undoButton()).toBeDisabled();
+    });
+
+    it("前兆ボタンを押すと「一つ前に戻す」ボタンが押せるようになる", async () => {
+      render(<QuestTable />);
+      const user = userEvent.setup();
+      await user.click(screen.getByRole("button", { name: "フェイク前兆" }));
+      expect(undoButton()).toBeEnabled();
+    });
+
+    it("フェイク前兆1回→戻すと、クエスト0回目・割合すべて 0.0% に戻り、ボタンは disabled になる", async () => {
+      render(<QuestTable />);
+      const user = userEvent.setup();
+      await user.click(screen.getByRole("button", { name: "フェイク前兆" }));
+      await user.click(undoButton());
+      expect(screen.getByText("クエスト0回目")).toBeInTheDocument();
+      expect(rates()).toEqual({
+        tableA: "0.0%",
+        tableB: "0.0%",
+        heavenPrep: "0.0%",
+        heaven: "0.0%",
+      });
+      expect(undoButton()).toBeDisabled();
+    });
+
+    it("フェイク前兆2回→戻す1回で、クエスト1回目・1回目の割合に戻る", async () => {
+      render(<QuestTable />);
+      const user = userEvent.setup();
+      const fake = screen.getByRole("button", { name: "フェイク前兆" });
+      await user.click(fake);
+      await user.click(fake);
+      await user.click(undoButton());
+      expect(screen.getByText("クエスト1回目")).toBeInTheDocument();
+      expect(rates()).toEqual({
+        tableA: "37.9%",
+        tableB: "33.7%",
+        heavenPrep: "28.4%",
+        heaven: "0.0%",
+      });
+      expect(undoButton()).toBeEnabled();
+    });
+
+    it("フェイク前兆2回→戻す2回で、クエスト0回目に戻り、ボタンは disabled になる", async () => {
+      render(<QuestTable />);
+      const user = userEvent.setup();
+      const fake = screen.getByRole("button", { name: "フェイク前兆" });
+      await user.click(fake);
+      await user.click(fake);
+      await user.click(undoButton());
+      await user.click(undoButton());
+      expect(screen.getByText("クエスト0回目")).toBeInTheDocument();
+      expect(rates()).toEqual({
+        tableA: "0.0%",
+        tableB: "0.0%",
+        heavenPrep: "0.0%",
+        heaven: "0.0%",
+      });
+      expect(undoButton()).toBeDisabled();
+    });
+
+    it("本前兆で確定した後に戻すと、確定した予想が消え、進行中の予想は本前兆を押す前の履歴に戻る", async () => {
+      render(<QuestTable />);
+      const user = userEvent.setup();
+      await user.click(screen.getByRole("button", { name: "フェイク前兆" }));
+      await user.click(screen.getByRole("button", { name: "本前兆" }));
+      expect(screen.getByRole("listitem", { name: "1回目のテーブル予想" })).toBeInTheDocument();
+
+      await user.click(undoButton());
+      expect(
+        screen.queryByRole("listitem", { name: "1回目のテーブル予想" }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText("クエスト1回目")).toBeInTheDocument();
+      expect(rates()).toEqual({
+        tableA: "37.9%",
+        tableB: "33.7%",
+        heavenPrep: "28.4%",
+        heaven: "0.0%",
+      });
+      expect(undoButton()).toBeEnabled();
+    });
+
+    it("1回目に本前兆で確定→戻すと、予想が消え、クエスト0回目で設定推測も出なくなる", async () => {
+      render(<QuestTable />);
+      const user = userEvent.setup();
+      await user.click(screen.getByRole("button", { name: "本前兆" }));
+      await user.click(undoButton());
+      expect(
+        screen.queryByRole("listitem", { name: "1回目のテーブル予想" }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText("クエスト0回目")).toBeInTheDocument();
+      expect(rates()).toEqual({
+        tableA: "0.0%",
+        tableB: "0.0%",
+        heavenPrep: "0.0%",
+        heaven: "0.0%",
+      });
+      expect(screen.queryByLabelText("設定推測")).toBeNull();
+      expect(undoButton()).toBeDisabled();
+    });
+
+    it("確定した予想が2個→戻すと1個になり、設定推測は割合表示から案内文表示に戻る", async () => {
+      render(<QuestTable />);
+      const user = userEvent.setup();
+      // 大社跡・フェイク前兆 → 寒冷群島・本前兆 を2セット
+      for (let i = 0; i < 2; i++) {
+        await user.click(screen.getByRole("radio", { name: "大社跡" }));
+        await user.click(screen.getByRole("button", { name: "フェイク前兆" }));
+        await user.click(screen.getByRole("radio", { name: "寒冷群島" }));
+        await user.click(screen.getByRole("button", { name: "本前兆" }));
+      }
+      await user.click(undoButton());
+
+      expect(screen.getByRole("listitem", { name: "1回目のテーブル予想" })).toBeInTheDocument();
+      expect(
+        screen.queryByRole("listitem", { name: "2回目のテーブル予想" }),
+      ).not.toBeInTheDocument();
+      // 1回目の確定内容は変わらない
+      expect(predictionRates(1)).toEqual({
+        tableA: "57.7%",
+        tableB: "6.4%",
+        heavenPrep: "35.9%",
+        heaven: "0.0%",
+      });
+      // 進行中は2セット目の 大社跡・フェイク前兆 1回分
+      expect(screen.getByText("クエスト1回目")).toBeInTheDocument();
+      expect(rates()).toEqual({
+        tableA: "37.9%",
+        tableB: "33.7%",
+        heavenPrep: "28.4%",
+        heaven: "0.0%",
+      });
+      const section = screen.getByLabelText("設定推測");
+      expect(
+        within(section).getByText("本前兆2回目から設定の割合を表示します。"),
+      ).toBeInTheDocument();
+      for (let i = 1; i <= 6; i++) {
+        expect(within(section).queryByText(`設定${i}`)).not.toBeInTheDocument();
+      }
+      expect(section).not.toHaveTextContent("%");
+    });
+
+    it("フェイク前兆を7回押す（7回目は止まる）→戻す1回で、クエスト5回目になる", async () => {
+      render(<QuestTable />);
+      const user = userEvent.setup();
+      const fake = screen.getByRole("button", { name: "フェイク前兆" });
+      for (let i = 0; i < 7; i++) {
+        await user.click(fake);
+      }
+      expect(screen.getByText("クエスト6回目")).toBeInTheDocument();
+      await user.click(undoButton());
+      expect(screen.getByText("クエスト5回目")).toBeInTheDocument();
+    });
+
+    it("フェイク前兆を8回押す→戻す6回で、クエスト0回目に戻り、ボタンは disabled になる", async () => {
+      render(<QuestTable />);
+      const user = userEvent.setup();
+      const fake = screen.getByRole("button", { name: "フェイク前兆" });
+      for (let i = 0; i < 8; i++) {
+        await user.click(fake);
+      }
+      for (let i = 0; i < 6; i++) {
+        await user.click(undoButton());
+      }
+      expect(screen.getByText("クエスト0回目")).toBeInTheDocument();
+      expect(undoButton()).toBeDisabled();
+    });
+
+    it("フィールドを選んだだけでは戻す対象にならず、ボタンは disabled のまま", async () => {
+      render(<QuestTable />);
+      const user = userEvent.setup();
+      await user.click(screen.getByRole("radio", { name: "寒冷群島" }));
+      expect(undoButton()).toBeDisabled();
+    });
+
+    it("戻しても、現在選んでいるフィールドは変わらない", async () => {
+      render(<QuestTable />);
+      const user = userEvent.setup();
+      // 大社跡でフェイク前兆 → 寒冷群島に変更 → 戻す
+      await user.click(screen.getByRole("button", { name: "フェイク前兆" }));
+      await user.click(screen.getByRole("radio", { name: "寒冷群島" }));
+      await user.click(undoButton());
+      expect(screen.getByRole("radio", { name: "寒冷群島" })).toBeChecked();
+      expect(screen.getByRole("radio", { name: "大社跡" })).not.toBeChecked();
+      expect(screen.getByText("クエスト0回目")).toBeInTheDocument();
+    });
+
+    it("フィールド変更をはさんでも、戻すのは前兆ボタンの操作1回ぶんだけ", async () => {
+      render(<QuestTable />);
+      const user = userEvent.setup();
+      // 大社跡・フェイク前兆 → 寒冷群島・フェイク前兆 → 溶岩洞に変更 → 戻す1回
+      await user.click(screen.getByRole("button", { name: "フェイク前兆" }));
+      await user.click(screen.getByRole("radio", { name: "寒冷群島" }));
+      await user.click(screen.getByRole("button", { name: "フェイク前兆" }));
+      await user.click(screen.getByRole("radio", { name: "溶岩洞" }));
+      await user.click(undoButton());
+      // 1回目 大社跡・フェイク前兆 の状態に戻る
+      expect(screen.getByText("クエスト1回目")).toBeInTheDocument();
+      expect(rates()).toEqual({
+        tableA: "37.9%",
+        tableB: "33.7%",
+        heavenPrep: "28.4%",
+        heaven: "0.0%",
+      });
+      expect(screen.getByRole("radio", { name: "溶岩洞" })).toBeChecked();
+      expect(undoButton()).toBeEnabled();
+    });
+  });
 });
